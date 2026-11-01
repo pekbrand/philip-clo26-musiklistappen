@@ -12,25 +12,27 @@ using var db = new DbHandler(connectionString);
 
 Console.WriteLine($"Musiklistappen: börja med att få menyn att fungera!  (databas: {connectionString})");
 
-int getValidNumber()
+int getValidNumber(int min, int max)
 {
     while (true)
     {
         string? input = Console.ReadLine();
-        if (string.IsNullOrEmpty(input))
+
+        if (string.IsNullOrWhiteSpace(input))
         {
-            Console.WriteLine("Your did not enter anything.");
+            Console.WriteLine("Du skrev inget. Försök igen.");
             continue;
         }
-        
-        if(int.TryParse(input, out int number))
-        { 
-            if (number >= 1 && number <= 4)
+
+        if (int.TryParse(input, out int number))
+        {
+            if (number >= min && number <= max)
             {
                 return number;
             }
-        } 
-        Console.WriteLine("Please enter a number between 1 and 4");
+        }
+
+        Console.WriteLine($"Ange ett heltal mellan {min} och {max}.");
     }
 }
 
@@ -45,7 +47,7 @@ while (running)
     Console.WriteLine("3. Ta bort en låt");
     Console.WriteLine("4. Avsluta");
 
-    int option = getValidNumber();
+    int option = getValidNumber(1,4);
 
     switch (option)
     {
@@ -60,9 +62,42 @@ while (running)
 
         case 2:
             Console.WriteLine("Du valde att lägga till en låt.");
+            Console.WriteLine("Ange Titel");
+            string titel = Console.ReadLine() ?? "";
+            Console.WriteLine("Ange längd i sekunder");
+            int length = getValidNumber(1,999);
+            Console.WriteLine("Ange album ID");
+            int albumId = getValidNumber(1,999);
+            var newSong = new Song
+            {
+                Titel = titel,
+                Length = length,
+                AlbumId = albumId
+            };
+            db.AddSong(newSong);
             break;
         case 3:
             Console.WriteLine("Du valde att ta bort en låt.");
+            var songsToDelete  = db.GetAllSongs();
+            foreach (var song in songsToDelete )
+            {
+                Console.WriteLine($"{song.Id}: {song.Titel} ({song.Length} sek)");
+            }
+            Console.WriteLine("Ange id för låten du vill ta bort:");
+            int songId = getValidNumber(1,int.MaxValue);
+            var songToDelete = db.GetSongById(songId);
+            if (songToDelete == null)
+            {
+                Console.WriteLine("Låten hittades inte.");
+                break;
+            }
+            Console.WriteLine($"Vill du radera {songToDelete.Titel}? j/n");
+            string? answer = Console.ReadLine();
+            if (answer?.ToLower() == "j")
+            {
+                bool deleted = db.DeleteSong(songId);
+                Console.WriteLine(deleted ? "Låten togs bort." : "Låten hittades inte.");
+            }
             break;
 
         case 4:

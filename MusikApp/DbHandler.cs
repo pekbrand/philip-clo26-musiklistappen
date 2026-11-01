@@ -64,9 +64,28 @@ public class DbHandler : IDisposable
     /// <summary>Hämtar en specifik låt. Returnerar null om den inte finns.</summary>
     public Song? GetSongById(int id)
     {
-        // TODO: SELECT ... WHERE Id = @id (parameter!).
-        // TODO: if (reader.Read()) { ... } annars returnera null.
-        throw new NotImplementedException();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM songs where id = @id;";
+        command.Parameters.AddWithValue("@id", id);
+        using var reader = command.ExecuteReader();
+        if (reader.Read())
+    
+        {
+            var song = new Song
+            {
+                Id = reader.GetInt32(0),
+                Titel = reader.GetString(1),
+                Length = reader.GetInt32(2),
+                AlbumId =reader.GetInt32(3)
+
+            };
+            return song;
+        }
+        else
+        {
+            return null;
+        }
+       
     }
 
     /// <summary>Söker låtar där titeln innehåller söktexten.</summary>
@@ -80,9 +99,17 @@ public class DbHandler : IDisposable
     /// <summary>Lägger till en ny låt.</summary>
     public void AddSong(Song song)
     {
-        // TODO: INSERT INTO ... VALUES (@titel, @langd, ...) med parametrar.
-        // Tips: INSERT ger ingen data tillbaka, så använd ExecuteNonQuery().
-        throw new NotImplementedException();
+        using var command = connection.CreateCommand();
+
+        command.CommandText = "INSERT INTO songs  (titel, length, album_id)  VALUES (@titel,@length,@albumId)";
+
+        command.Parameters.AddWithValue("@titel", song.Titel);
+        command.Parameters.AddWithValue("@length", song.Length);
+        command.Parameters.AddWithValue("@albumId", song.AlbumId);
+        // Lägg till parametrarna för längd och album-id här.
+
+        int addedRows = command.ExecuteNonQuery();
+        Console.WriteLine($"{addedRows} låt tillagd.");
     }
 
     /// <summary>Tar bort en låt. Returnerar true om en rad faktiskt togs bort.</summary>
@@ -91,8 +118,32 @@ public class DbHandler : IDisposable
         // TODO: DELETE FROM ... WHERE Id = @id.
         // Tips: ExecuteNonQuery() returnerar antalet påverkade rader.
         // Menyn i Program.cs ska fråga "Är du säker? j/n" innan den här metoden anropas.
-        throw new NotImplementedException();
+        using var command = connection.CreateCommand();
+
+    command.CommandText = 
+        """
+        BEGIN TRANSACTION;
+
+        DELETE FROM song_genres WHERE song_id = @id;
+        DELETE FROM songs WHERE id = @id;
+
+        COMMIT;
+        """;
+
+    command.Parameters.AddWithValue("@id", id);
+    try
+    {
+        int deletedRows = command.ExecuteNonQuery();
+        return deletedRows > 0;
     }
+    catch
+    {
+        using var rollback = connection.CreateCommand();
+        rollback.CommandText = "ROLLBACK;";
+        rollback.ExecuteNonQuery();
+        throw;
+    }
+}
 
     // ---------------------------------------------------------------
     // VG-nivå: du behöver minst EN av dessa två (och reflektionen i README)
