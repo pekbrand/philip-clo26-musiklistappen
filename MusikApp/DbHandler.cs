@@ -159,8 +159,30 @@ public class DbHandler : IDisposable
     /// <summary>(VG, alternativ B) Låtar som är längre än medellängden. Kräver en subquery.</summary>
     public List<Song> GetSongsLongerThanAverage()
     {
-        // TODO: SELECT ... WHERE Längd > (SELECT AVG(Längd) FROM Låtar).
-        throw new NotImplementedException();
+        var songs = new List<Song>();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = 
+        """
+        SELECT *
+        FROM songs
+        WHERE length > (SELECT AVG(length) FROM songs)
+        ORDER BY titel;
+        """;
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var song = new Song
+            {
+                Id = reader.GetInt32(0),
+                Titel = reader.GetString(1),
+                Length = reader.GetInt32(2),
+                AlbumId =reader.GetInt32(3)
+
+            };
+            songs.Add(song);
+        }
+        return songs;
     }
 }
 

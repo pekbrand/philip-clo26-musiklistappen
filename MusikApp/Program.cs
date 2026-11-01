@@ -10,8 +10,8 @@ var connectionString = config.GetConnectionString("Default")
 
 using var db = new DbHandler(connectionString);
 
-Console.WriteLine($"Musiklistappen: börja med att få menyn att fungera!  (databas: {connectionString})");
-
+// Console.WriteLine($"Musiklistappen: börja med att få menyn att fungera!  (databas: {connectionString})");
+Console.Clear();
 int getValidNumber(int min, int max)
 {
     while (true)
@@ -40,18 +40,20 @@ bool running = true;
 
 while (running)
 {
-
+    Console.WriteLine("");
     Console.WriteLine("=== Musiklistappen ===");
     Console.WriteLine("1. Visa alla låtar");
     Console.WriteLine("2. Lägg till en låt");
     Console.WriteLine("3. Ta bort en låt");
-    Console.WriteLine("4. Avsluta");
+    Console.WriteLine("4. Visa låtar längre än medellängden");
+    Console.WriteLine("5. Avsluta");
 
-    int option = getValidNumber(1,4);
+    int option = getValidNumber(1,5);
 
     switch (option)
     {
         case 1:
+            Console.Clear();
             Console.WriteLine("Du valde att visa alla låtar.");
             var songs = db.GetAllSongs();
             foreach (var song in songs)
@@ -61,6 +63,7 @@ while (running)
             break;
 
         case 2:
+            Console.Clear();
             Console.WriteLine("Du valde att lägga till en låt.");
             Console.WriteLine("Ange Titel");
             string titel = Console.ReadLine() ?? "";
@@ -77,6 +80,7 @@ while (running)
             db.AddSong(newSong);
             break;
         case 3:
+            Console.Clear();
             Console.WriteLine("Du valde att ta bort en låt.");
             var songsToDelete  = db.GetAllSongs();
             foreach (var song in songsToDelete )
@@ -99,8 +103,16 @@ while (running)
                 Console.WriteLine(deleted ? "Låten togs bort." : "Låten hittades inte.");
             }
             break;
-
         case 4:
+            Console.Clear();
+            Console.WriteLine("Låtar längre än medellängden:");
+            var longSongs = db.GetSongsLongerThanAverage();
+            foreach (var song in longSongs)
+            {
+                Console.WriteLine($"{song.Id}: {song.Titel} ({song.Length} sek)");
+            }
+            break;
+        case 5:
             Console.WriteLine("Tack för idag!");
             running = false;
             break;
