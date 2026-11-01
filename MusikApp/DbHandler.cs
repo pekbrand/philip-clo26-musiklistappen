@@ -18,10 +18,11 @@ namespace MusikApp;
 /// Använd "using var" på anslutning och kommando så stängs de av sig själva.
 /// Bygg SQL:en med parametrar (@titel), aldrig genom att klistra ihop strängar.
 /// </summary>
-public class DbHandler
+public class DbHandler : IDisposable
 {
     public string connectionString { get; private set; }
-    
+    private SqliteConnection connection { get; }
+
     public DbHandler(string connectionString)
     {
         this.connectionString = connectionString;
@@ -40,10 +41,24 @@ public class DbHandler
     /// <summary>Hämtar alla låtar, sorterade på titel.</summary>
     public List<Song> GetAllSongs()
     {
-        // TODO: SELECT från din låt-tabell med ORDER BY.
-        // TODO: loopa med reader.Read() och gör ett Song-objekt av varje rad.
-        // Tips: reader.GetInt32(0), reader.GetString(1) ... eller reader["Titel"].
-        throw new NotImplementedException();
+        var songs = new List<Song>();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM songs ORDER BY titel";
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var song = new Song
+            {
+                Id = reader.GetInt32(0),
+                Titel = reader.GetString(1),
+                Length = reader.GetInt32(2),
+                AlbumId =reader.GetInt32(3)
+
+            };
+            songs.Add(song);
+        }
+        return songs;
     }
 
     /// <summary>Hämtar en specifik låt. Returnerar null om den inte finns.</summary>
@@ -97,3 +112,7 @@ public class DbHandler
         throw new NotImplementedException();
     }
 }
+
+
+
+

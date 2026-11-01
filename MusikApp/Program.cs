@@ -8,6 +8,7 @@ var config = new ConfigurationBuilder()
 var connectionString = config.GetConnectionString("Default")
     ?? throw new InvalidOperationException("Hittar ingen connection string 'Default' i appsettings.json.");
 
+using var db = new DbHandler(connectionString);
 
 Console.WriteLine($"Musiklistappen: börja med att få menyn att fungera!  (databas: {connectionString})");
 
@@ -15,7 +16,7 @@ int getValidNumber()
 {
     while (true)
     {
-        string input = Console.ReadLine();
+        string? input = Console.ReadLine();
         if (string.IsNullOrEmpty(input))
         {
             Console.WriteLine("Your did not enter anything.");
@@ -50,6 +51,11 @@ while (running)
     {
         case 1:
             Console.WriteLine("Du valde att visa alla låtar.");
+            var songs = db.GetAllSongs();
+            foreach (var song in songs)
+            {
+                Console.WriteLine($"{song.Id}: {song.Titel} ({song.Length} sek)");
+            }
             break;
 
         case 2:
