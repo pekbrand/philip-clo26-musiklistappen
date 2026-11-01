@@ -20,16 +20,19 @@ namespace MusikApp;
 /// </summary>
 public class DbHandler
 {
-    // Tips: spara bara connection string här. Den kommer från appsettings.json
-    // via Program.cs (t.ex. "Data Source=musik.db").
-    // Öppna sedan en NY anslutning inuti varje metod nedan.
-
+    public string connectionString { get; private set; }
+    
     public DbHandler(string connectionString)
     {
-        // TODO: spara connectionString i ett fält som metoderna nedan kan använda.
-        throw new NotImplementedException();
+        this.connectionString = connectionString;
+        connection = new SqliteConnection(connectionString);
+        connection.Open();
     }
 
+    public void Dispose()
+    {
+        connection.Dispose();
+    }
     // ---------------------------------------------------------------
     // G-nivå: du behöver minst tre av de fem här (välj själv vilka)
     // ---------------------------------------------------------------
